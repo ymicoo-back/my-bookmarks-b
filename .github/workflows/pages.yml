@@ -1,15 +1,38 @@
-name: Deploy
+name: Deploy GitHub Pages
+
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+# 关键修复：这里必须加上权限配置！
+permissions:
+  contents: read
+  pages: write
+  id-token: write  # 这就是报错里要求的权限
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  build:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
-      - name: Deploy
+          path: '.'  # 你的网站文件在仓库根目录，不用改
+
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
